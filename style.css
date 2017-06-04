@@ -1,0 +1,9 @@
+.float-right{
+  float: right;
+}
+h1{
+  display: inline-block;
+}
+h3{
+  padding-top: 10px;
+}
