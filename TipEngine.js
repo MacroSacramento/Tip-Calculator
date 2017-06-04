@@ -1,14 +1,38 @@
 $(document).ready(function () {
-    var fieldCount = 0;
-    var busser = new Array();
-    var bwContainer = $("#backwaiter_container")
-    var bwHidden = false;
-    var tpHidden = false;
+    var fieldCount = 0; //keeps track of the amount of backwaiters there are 
+    var busser = new Array(); //Array to hold all the backwaiters
+    var bwContainer = $("#backwaiter_container"); //Div where the backwaiter objects are appended to
+    var bwHidden = false; //backwaiter div not hidden by default
+    var tpHidden = false; //tip pool div not hidden by default
 
+    function Backwaiter() {
+        this.objId = fieldCount; //identifier for backwaiters
+        this.startTime = [16, 00]; //default start time is 4:00
+        this.endTime = [20, 00]; //default end time is 8:00
+        this.timeWorked; //empty field for total time worked
+        this.tips; //tips made
+
+        //the code for the form that is created when a new backwaiter object is created
+        this.html = "<div class=\"jumbotron\" id=\"" + fieldCount + "\">" +
+            "<form class=\"input-group\">" +
+            "<span class=\"input-group-addon\">From:</span> <input type=\"time\" class=\"form-control\" id=\"startinput\" value=\"16:00:00\" step=\"60\" /> <span class=\"input-group-addon\">To: </span><input type=\"time\" class=\"form-control\" id=\"endInput\" value=\"20:00:00\" step=\"60\" />" +
+            "</form>" +
+            "<br>"
+            +
+            "<button class=\"removeField btn btn-default\">Remove</button>" +
+            "</div>";
+
+        $(bwContainer).append(this.html);
+        fieldCount++;
+    }
+
+    //Initialize first backwaiter object into busser array
     busser[0] = new Backwaiter();
 
     $(".addField").click(function (e) {
-        e.preventDefault();
+        e.preventDefault(); //Makes button do nothing by default
+        
+        //checks for deleted backwaiters in array and fills them with the new backwaiter object
         for (i = 0; i < busser.length; i++) {
             if (busser[i] == undefined) {
                 fieldCount = i;
@@ -22,6 +46,7 @@ $(document).ready(function () {
     $(bwContainer).on("click", ".removeField", function (e) {
         e.preventDefault();
 
+        //Removes the busser object from the array
         for (i = 0; i < busser.length; i++) {
             console.log(busser[i].objId);
             if (busser[i].objId == $(this).parent('div').attr('id')) {
@@ -29,51 +54,67 @@ $(document).ready(function () {
             }
         }
 
+        //Reassigns objId to all backwaiters for consistency
         for (i = 0; i < busser.length; i++) {
             busser[i].objId = i;
         }
 
+        //Removes actual html div
         $(this).parent('div').remove();
     })
 
     $(".calculate").click(function () {
 
+        //Rounds minutes to the nearest 15 in the backwaiter object 
         for (i = 0; i < busser.length; i++) {
-            console.log(parseInt(busser[i].startTime[1]))
-            if (5 < parseInt(busser[i].startTime[1]) < 15) {
+            if(busser[i].startTime[1] <= 15){
                 busser[i].startTime[1] = 15;
-            } else if (15 < parseInt(busser[i].startTime[1]) < 30) {
+            } else if(15 < busser[i].startTime[1] && busser[i].startTime[1] <= 30) {
                 busser[i].startTime[1] = 30;
-            } else if (30 < parseInt(busser[i].startTime[1]) < 45) {
+            } else if(30 < busser[i].startTime[1] && busser[i].startTime[1] <= 45) {
                 busser[i].startTime[1] = 45;
-            } else if (45 < parseInt(busser[i].startTime[1]) < 59) {
+            } else if(45 < busser[i].startTime[1] && busser[i].startTime[1] <= 59) {
                 busser[i].startTime[1] = 00;
                 busser[i].startTime[0]++;
-            } else {
-
             }
-            console.log(busser[i].startTime)
-        }  
+
+            if(busser[i].endTime[1] <= 15){
+                busser[i].endTime[1] = 15;
+            } else if(15 < busser[i].endTime[1] && busser[i].endTime[1] <= 30) {
+                busser[i].endTime[1] = 30;
+            } else if(30 < busser[i].endTime[1] && busser[i].endTime[1] <= 45) {
+                busser[i].endTime[1] = 45;
+            } else if(45 < busser[i].endTime[1] && busser[i].endTime[1] <= 59) {
+                busser[i].endTime[1] = 00;
+                busser[i].endTime[0]++;
+            }
+
+        }
+        
+        //rest of calculations go here
 
     })
 
+    //Whenever the form is changed the variables in the backwaiter object are set to that.
     $("input").on("change", function () {
 
-        console.log("changed");
 
         var busPos = parseInt($(this).parent('form').parent('div').attr('id'));
 
         if ($(this).attr('id') == "startinput") {
             busser[busPos].startTime = $(this).val().split(":");
             for(i = 0; i < busser[busPos].startTime.length; i++){
-                busser[busPos].startTime[i] = parseInt(busser[busPos].startTime[i])
+                busser[busPos].startTime[i] = parseInt(busser[busPos].startTime[i]);
             }
         } else if ($(this).attr('id') == "endInput") {
             busser[busPos].endTime = $(this).val().split(":");
             for(i = 0; i < busser[busPos].endTime.length; i++){
-                busser[busPos].endTime[i] = parseInt(busser[busPos].endTime[i])
+                busser[busPos].endTime[i] = parseInt(busser[busPos].endTime[i]);
             }
         }
+
+        console.log(busser[busPos].startTime);
+
     })
 
     $(".toggleTipPool").click(function () {
@@ -99,25 +140,5 @@ $(document).ready(function () {
             $(this).addClass("glyphicon-chevron-down");
         }
     })
-
-    function Backwaiter() {
-        this.objId = fieldCount
-        this.startTime = [16, 00];
-        this.endTime = [20, 00];
-        this.timeWorked;
-        this.tips;
-
-        this.html = "<div class=\"jumbotron\" id=\"" + fieldCount + "\">" +
-            "<form class=\"input-group\">" +
-            "<span class=\"input-group-addon\">From:</span> <input type=\"time\" class=\"form-control\" id=\"startinput\" value=\"16:00:00\" step=\"60\" /> <span class=\"input-group-addon\">To: </span><input type=\"time\" class=\"form-control\" id=\"endInput\" value=\"20:00:00\" step=\"60\" />" +
-            "</form>" +
-            "<br>"
-            +
-            "<button class=\"removeField btn btn-default\">Remove</button>" +
-            "</div>";
-
-        $(bwContainer).append(this.html);
-        fieldCount++;
-    }
 
 });
