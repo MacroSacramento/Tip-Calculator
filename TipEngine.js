@@ -96,6 +96,8 @@ $(document).ready(function () {
             }
         }
 
+//THIS IS THE BROKEN PART
+
         for(var i = 0; i < busser.length; i++){
             //Set total hours works for specific busser
             console.log(busser[i].startTime[0] + ":" + busser[i].startTime[1] + " " + busser[i].endTime[0] + ":" + busser[i].endTime[1]);
@@ -106,7 +108,7 @@ $(document).ready(function () {
             //Calculate cumulative hours worked by each busser
             hourPool += busser[i].timeWorked;
         }
-
+//END BROKEN PART
         //Find hourly tip payout
         tipHourly = tipPool / hourPool;
 
