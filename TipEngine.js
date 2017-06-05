@@ -59,14 +59,21 @@ $(document).ready(function () {
             busser[i].objId = i;
         }
 
-        //Removes actual html div
+        //Removes actual html busser time input
         $(this).parent('div').remove();
     })
 
     $(".calculate").click(function () {
 
-        //Rounds minutes to the nearest 15 in the backwaiter object 
+        var tipPool = parseInt($("#tipPool").val());
+        var hourPool = 0;
+        var tipHourly = 0;
+
+        var leftOver = tipPool;
+
+        
         for (i = 0; i < busser.length; i++) {
+            //Rounds minutes to the nearest 15 in the backwaiter object 
             if(busser[i].startTime[1] <= 15){
                 busser[i].startTime[1] = 15;
             } else if(15 < busser[i].startTime[1] && busser[i].startTime[1] <= 30) {
@@ -77,7 +84,6 @@ $(document).ready(function () {
                 busser[i].startTime[1] = 00;
                 busser[i].startTime[0]++;
             }
-
             if(busser[i].endTime[1] <= 15){
                 busser[i].endTime[1] = 15;
             } else if(15 < busser[i].endTime[1] && busser[i].endTime[1] <= 30) {
@@ -88,17 +94,36 @@ $(document).ready(function () {
                 busser[i].endTime[1] = 00;
                 busser[i].endTime[0]++;
             }
+        }
 
+        for(var i = 0; i < busser.length; i++){
+            //Set total hours works for specific busser
+            console.log(busser[i].startTime[0] + ":" + busser[i].startTime[1] + " " + busser[i].endTime[0] + ":" + busser[i].endTime[1]);
+            busser[i].timeWorked = ((busser[i].endTime[0] - busser[i].startTime[0]) * 60) + " " + Math.abs(busser[i].endTime[1] - busser[i].startTime[1]);
+
+            console.log("Busser " + (i + 1) + " mins worked: " + busser[i].timeWorked);
+
+            //Calculate cumulative hours worked by each busser
+            hourPool += busser[i].timeWorked;
+        }
+
+        //Find hourly tip payout
+        tipHourly = tipPool / hourPool;
+
+        for(var i = 0; i < busser.length; i++){
+            busser[i].tips = busser[i].timeWorked * tipHourly;
+            //leftOver -= busser[i].tips;
+            //console.log("Tip Pool: " + tipPool + ";\tLeft Over: " + leftOver);
         }
         
+        //console.log(busser);
+
         //rest of calculations go here
 
     })
 
     //Whenever the form is changed the variables in the backwaiter object are set to that.
     $("input").on("change", function () {
-
-
         var busPos = parseInt($(this).parent('form').parent('div').attr('id'));
 
         if ($(this).attr('id') == "startinput") {
@@ -113,10 +138,9 @@ $(document).ready(function () {
             }
         }
 
-        console.log(busser[busPos].startTime);
-
     })
 
+    //changes the arrow when show/hide clicked
     $(".toggleTipPool").click(function () {
         if (tpHidden) {
             tpHidden = false;
@@ -129,6 +153,7 @@ $(document).ready(function () {
         }
     })
 
+    //changes the arrow when show/hide clicked
     $(".toggleBackwaiters").click(function () {
         if (bwHidden) {
             bwHidden = false;
