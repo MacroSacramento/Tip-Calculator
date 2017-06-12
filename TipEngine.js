@@ -4,6 +4,7 @@ $(document).ready(function () {
     var bwContainer = $("#backwaiter_container"); //Div where the backwaiter objects are appended to
     var bwHidden = false; //backwaiter div not hidden by default
     var tpHidden = false; //tip pool div not hidden by default
+    var showData = false; //Toggle for Results page
 
     function Backwaiter() {
         this.objId = fieldCount; //identifier for backwaiters
@@ -13,14 +14,17 @@ $(document).ready(function () {
         this.tips; //tips made
 
         //the code for the form that is created when a new backwaiter object is created
-        this.html = "<div class=\"jumbotron\" id=\"" + fieldCount + "\">" +
-            "<form class=\"input-group\">" +
-            "<span class=\"input-group-addon\">From:</span> <input type=\"time\" class=\"form-control\" id=\"startinput\" value=\"16:00:00\" step=\"60\" /> <span class=\"input-group-addon\">To: </span><input type=\"time\" class=\"form-control\" id=\"endInput\" value=\"20:00:00\" step=\"60\" />" +
-            "</form>" +
-            "<br>"
-            +
-            "<button class=\"removeField btn btn-default\">Remove</button>" +
-            "</div>";
+        this.html = "<div class=\"jumbotron busser\" id=\"" + fieldCount + "\">" +
+                        "<form class=\"input-group\">" +
+                            "<span class=\"input-group-addon\">From:</span><input type=\"time\" class=\"form-control\" id=\"startInput\" value=\"16:00:00\" step=\"60\" />" + 
+                        "</form>" + 
+                        "<br>" + 
+                        "<form class=\"input-group\">" +
+                            "<span class=\"input-group-addon\">To: </span><input type=\"time\" class=\"form-control\" id=\"endInput\" value=\"20:00:00\" step=\"60\" />" +
+                        "</form>" +
+                        "<br>" +
+                        "<button class=\"removeField btn btn-default\">Remove</button>" +
+                    "</div>";
 
         $(bwContainer).append(this.html);
         fieldCount++;
@@ -31,7 +35,7 @@ $(document).ready(function () {
 
     $(".addField").click(function (e) {
         e.preventDefault(); //Makes button do nothing by default
-        
+
         //checks for deleted backwaiters in array and fills them with the new backwaiter object
         for (i = 0; i < busser.length; i++) {
             if (busser[i] == undefined) {
@@ -69,77 +73,74 @@ $(document).ready(function () {
         var hourPool = 0;
         var tipHourly = 0;
 
-        var leftOver = tipPool;
+        var leftOver = $("#tipPool").val();
 
-        
-        for (i = 0; i < busser.length; i++) {
-            //Rounds minutes to the nearest 15 in the backwaiter object 
-            if(busser[i].startTime[1] <= 15){
-                busser[i].startTime[1] = 15;
-            } else if(15 < busser[i].startTime[1] && busser[i].startTime[1] <= 30) {
-                busser[i].startTime[1] = 30;
-            } else if(30 < busser[i].startTime[1] && busser[i].startTime[1] <= 45) {
-                busser[i].startTime[1] = 45;
-            } else if(45 < busser[i].startTime[1] && busser[i].startTime[1] <= 59) {
-                busser[i].startTime[1] = 00;
-                busser[i].startTime[0]++;
+        $(".busser").each(function (i) {
+            //Sets times for bussers
+            busser[i].startTime = $("#" + i).children("form").children("#startInput").val().split(":");
+            for (var j = 0; j < busser[i].startTime.length; j++) {
+                busser[i].startTime[j] = parseInt(busser[i].startTime[j]);
             }
-            if(busser[i].endTime[1] <= 15){
-                busser[i].endTime[1] = 15;
-            } else if(15 < busser[i].endTime[1] && busser[i].endTime[1] <= 30) {
-                busser[i].endTime[1] = 30;
-            } else if(30 < busser[i].endTime[1] && busser[i].endTime[1] <= 45) {
-                busser[i].endTime[1] = 45;
-            } else if(45 < busser[i].endTime[1] && busser[i].endTime[1] <= 59) {
-                busser[i].endTime[1] = 00;
-                busser[i].endTime[0]++;
+            busser[i].endTime = $("#" + i).children("form").children("#endInput").val().split(":");
+            for (var j = 0; j < busser[i].endTime.length; j++) {
+                busser[i].endTime[j] = parseInt(busser[i].endTime[j]);
             }
-        }
-
-//THIS IS THE BROKEN PART
-
-        for(var i = 0; i < busser.length; i++){
-            //Set total hours works for specific busser
-            console.log(busser[i].startTime[0] + ":" + busser[i].startTime[1] + " " + busser[i].endTime[0] + ":" + busser[i].endTime[1]);
-            busser[i].timeWorked = ((busser[i].endTime[0] - busser[i].startTime[0]) * 60) + " " + Math.abs(busser[i].endTime[1] - busser[i].startTime[1]);
-
-            console.log("Busser " + (i + 1) + " mins worked: " + busser[i].timeWorked);
-
-            //Calculate cumulative hours worked by each busser
+            busser[i].timeWorked = ((busser[i].endTime[0] - busser[i].startTime[0])*60+(busser[i].endTime[1] - busser[i].startTime[1]))
+            //sets cummulative hours worked
             hourPool += busser[i].timeWorked;
-        }
-//END BROKEN PART
-        //Find hourly tip payout
-        tipHourly = tipPool / hourPool;
 
-        for(var i = 0; i < busser.length; i++){
-            busser[i].tips = busser[i].timeWorked * tipHourly;
-            //leftOver -= busser[i].tips;
-            //console.log("Tip Pool: " + tipPool + ";\tLeft Over: " + leftOver);
+        })
+
+        tipHourly = (tipPool/hourPool);
+
+        //sets tips for bussers and calculates money left over
+        for (var i = 0; i < busser.length; i++){
+            busser[i].tips = Math.round(busser[i].timeWorked * tipHourly);
+            console.log("Busser " + i + " tips: " + busser[i].tips);
+            leftOver -= busser[i].tips;
+        }
+
+        //creates a div for each busser's data
+        for (var i = 0; i < busser.length; i++){
+            var results_html = "<div class=\"jumbotron\">" + 
+                                    "<h2>Busser " + (i+1) + ": </h2>" +
+                                    "<p>Hours Worked: " + (Math.round((busser[i].timeWorked/60)*100)/100) + "</p>" +
+                                    "<p>Tips: $" + busser[i].tips + "</p>" +
+                                "</div>";
+            $("#busser-data").append(results_html);
         }
         
-        //console.log(busser);
+        //sets text to match data
+        $("#tip-pool").text("Tip Pool: $" + tipPool);
+        $("#hour-pool").text("Total Hours worked by bussers: " + (Math.round((hourPool/60)*100)/100));
+        $("#busser-hourly").text("Tip Hourly: $" + (Math.round(tipHourly*6000)/100));
+        if(leftOver == 0){
+            $("#left-over").css("display", "none");
+        } else {
+            $("#left-over").text("Money Left Over: $" + leftOver);
+        }
 
-        //rest of calculations go here
+        //Changes page shown
+        $("#calc-page").css("display", "none");
+        $("#results-page").css("display", "inline");
+
+        //Changes buttons displayed
+        $(".calculate, .addField").css("display", "none");
+        $(".editData").css("display", "inline");
 
     })
 
-    //Whenever the form is changed the variables in the backwaiter object are set to that.
-    $("input").on("change", function () {
-        var busPos = parseInt($(this).parent('form').parent('div').attr('id'));
+    $(".editData").click(function(){
+        //deletes busser divs
+        $("#busser-data").empty();
 
-        if ($(this).attr('id') == "startinput") {
-            busser[busPos].startTime = $(this).val().split(":");
-            for(i = 0; i < busser[busPos].startTime.length; i++){
-                busser[busPos].startTime[i] = parseInt(busser[busPos].startTime[i]);
-            }
-        } else if ($(this).attr('id') == "endInput") {
-            busser[busPos].endTime = $(this).val().split(":");
-            for(i = 0; i < busser[busPos].endTime.length; i++){
-                busser[busPos].endTime[i] = parseInt(busser[busPos].endTime[i]);
-            }
-        }
+        //Changes page shown
+        $("#calc-page").css("display", "inline");
+        $("#results-page").css("display", "none");
 
+        //Changes buttons displayed
+        $(".calculate, .addField").css("display", "inline");
+        $(".editData").css("display", "none");
     })
 
     //changes the arrow when show/hide clicked
